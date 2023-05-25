@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ATC Prompts</title>
+    <style>
+        body {
+            background-image: url('https://tr.rbxcdn.com/312e98daf3f9e97a76380c8614120aef/768/432/Image/Png');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-bar {
+            background-color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+        }
+
+        .header-content {
+            padding: 20px;
+        }
+
+        h1, p {
+            margin: 0;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .flight-form {
+            margin-top: 150px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .flight-form h2 {
+            margin-top: 0;
+        }
+
+        .flight-form label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .flight-form input[type="text"],
+        .flight-form input[type="number"],
+        .flight-form select,
+        .flight-form textarea {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .flight-form input[type="submit"] {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: grey;
+            color: white;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #eaeaea;
+            border-radius: 5px;
+        }
+
+        .content {
+            max-height: 200px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <div class="header-content">
+            <h1>ATC Prompts</h1>
+            <p>ATC Prompts</p>
+        </div>
+    </div>
+
+    <a href="index.html">
+        <button class="back-button">Go Back</button>
+    </a>
+
+    <div class="flight-form">
+        <form id="flightform" onsubmit="generatePage(event)" autocomplete="off">
+            <h2>File a new flight plan</h2>
+            <label>Company: <input id="callsign" placeholder="Ex: American" name="company" maxlength="20" required=""></label>
+            <label>Callsign Numbers: <input id="callsign-nums" min="1000" max="9999" type="number" placeholder="Ex: 1829" name="callsign_nums" required=""></label>
+            <label>Alt Callsign (if any): <input id="alt" placeholder="Ex: N14CA" name="alt_callsign" maxlength="6"></label>
+            <label>Aircraft Type: <input id="type" placeholder="Ex: B737" name="aircraft_type" maxlength="5" required=""></label>
+            <label>Flight Rules:</label>
+            <select id="rules" name="flight_rules">
+                <option value="IFR">IFR</option>
+                <option value="VFR">VFR</option>
+            </select>
+            <label>Departing Airport: <input id="departure" placeholder="Ex: IZOL" name="departing_airport" maxlength="4" required=""></label>
+            <label>Arriving Airport: <input id="arrival" placeholder="Ex: IRFD" name="arriving_airport" maxlength="4" required=""></label>
+            <label>Flight Level: <input id="level" type="number" min="1" max="600" placeholder="Ex: 025" name="flight_level" required=""></label>
+            <label>Route Type:</label>
+            <select id="route-type" onchange="handleRouteTypeChange()" name="route_type">
+                <option value="Standard">GPS direct</option>
+                <option value="Custom">Custom</option>
+            </select>
+            <div id="waypoints-container" style="display: none;">
+                <label>Waypoints:</label>
+                <textarea id="waypoints" placeholder="Enter waypoints separated by commas" name="waypoints"></textarea>
+            </div>
+            <input type="submit" value="Submit">
+        </form>
+
+        <div class="instructions" style="display: none;">
+            <h2>Flight info</h2>
+            <div class="content"></div>
+        </div>
+
+        <details id="communication-section" style="display: none;">
+            <summary>Communication</summary>
+            <div class="content">
+                <h3>Radio Check (Optional)</h3>
+                <p>
+                    "{callsign}, IRFD Tower. 5 by 5"<br>
+                    <br>
+                    5 by 5 = best<br>
+                    1 by 5 = worst
+                </p>
+
+                <h3>Request IFR Clearance</h3>
+                <p id="communication-content"></p>
+            </div>
+        </details>
+    </div>
+
+    <script>
+        var instructions = document.querySelector('.instructions');
+        var communicationSection = document.getElementById('communication-section');
+        instructions.style.display = 'none'; // Hide the instructions initially
+        communicationSection.style.display = 'none'; // Hide the communication section initially
+
+        function handleRouteTypeChange() {
+            var routeType = document.getElementById('route-type').value;
+            var waypointsContainer = document.getElementById('waypoints-container');
+
+            if (routeType === "Custom") {
+                waypointsContainer.style.display = 'block';
+            } else {
+                waypointsContainer.style.display = 'none';
+            }
+        }
+
+        function generatePage(event) {
+            event.preventDefault(); // Prevent form submission
+
+            var company = document.getElementById('callsign').value;
+            var callsignNums = document.getElementById('callsign-nums').value;
+            var altCallsign = document.getElementById('alt').value;
+            var aircraftType = document.getElementById('type').value;
+            var flightRules = document.getElementById('rules').value;
+            var departingAirport = document.getElementById('departure').value;
+            var arrivingAirport = document.getElementById('arrival').value;
+            var flightLevel = document.getElementById('level').value;
+            var routeType = document.getElementById('route-type').value;
+            var waypoints = document.getElementById('waypoints').value;
+
+            // Generate the ATCP content
+            var atcpContent = '<h2>ATC Plan</h2>' +
+                '<h3>Flight Plan Filing</h3>' +
+                '<p>Company: ' + company + '</p>' +
+                '<p>Callsign: ' + company + '-' + callsignNums + '</p>' +
+                '<p>Alt Callsign: ' + altCallsign + '</p>' +
+                '<p>Aircraft Type: ' + aircraftType + '</p>' +
+                '<p>Flight Rules: ' + flightRules + '</p>' +
+                '<p>Departing Airport: ' + departingAirport + '</p>' +
+                '<p>Arriving Airport: ' + arrivingAirport + '</p>' +
+                '<p>Flight Level: ' + flightLevel + '</p>';
+
+            if (routeType === "Custom") {
+                atcpContent += '<p>Waypoints: ' + waypoints + '</p>';
+            } else {
+                atcpContent += '<p>Route Type: GPS Direct</p>';
+            }
+
+            // Display the ATCP content
+            var content = document.querySelector('.instructions .content');
+            content.innerHTML = atcpContent;
+            instructions.style.display = 'block';
+
+            // Update the communication content
+            var communicationContent = document.getElementById('communication-content');
+            communicationContent.innerHTML = '"' + company + '-' + callsignNums + ', IRFD Tower. Cleared to IZOL via [Route]. Maintain [Cruising Altitude]. Expect Runway [runway] Departure is with me. Squawk [Assigned Transponder Code]."';
+            
+            // Show the communication section
+            communicationSection.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
